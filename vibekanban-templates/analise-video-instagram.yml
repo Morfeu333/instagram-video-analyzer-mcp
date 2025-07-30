@@ -1,0 +1,359 @@
+# Template VibeKanban: Análise de Vídeo Instagram
+# Versão: 1.0.0
+# Descrição: Template completo para análise de vídeos do Instagram usando MCP
+
+name: "Análise de Vídeo Instagram"
+description: "Template para análise completa de vídeos do Instagram com IA"
+version: "1.0.0"
+author: "Instagram Video Analyzer Team"
+tags: ["instagram", "video", "analysis", "ai", "mcp"]
+
+# Variáveis do template
+variables:
+  - name: "video_url"
+    description: "URL do vídeo do Instagram"
+    type: "string"
+    required: true
+    validation:
+      pattern: "^https?://(www\\.)?(instagram\\.com|instagr\\.am)/.+"
+      message: "URL deve ser do Instagram"
+    
+  - name: "analysis_type"
+    description: "Tipo de análise a ser realizada"
+    type: "select"
+    required: false
+    default: "comprehensive"
+    options:
+      - value: "comprehensive"
+        label: "Análise Completa"
+        description: "Análise detalhada com todos os aspectos"
+      - value: "summary"
+        label: "Resumo"
+        description: "Resumo conciso do conteúdo"
+      - value: "transcription"
+        label: "Transcrição"
+        description: "Transcrição completa do áudio"
+      - value: "visual_description"
+        label: "Descrição Visual"
+        description: "Descrição detalhada dos elementos visuais"
+    
+  - name: "project_name"
+    description: "Nome do projeto (opcional)"
+    type: "string"
+    required: false
+    default: "Análise Instagram"
+    
+  - name: "output_format"
+    description: "Formato de saída desejado"
+    type: "select"
+    required: false
+    default: "markdown"
+    options:
+      - value: "markdown"
+        label: "Markdown"
+      - value: "json"
+        label: "JSON"
+      - value: "txt"
+        label: "Texto Simples"
+
+# Configurações do template
+settings:
+  max_concurrent_tasks: 3
+  timeout_minutes: 15
+  retry_failed_tasks: true
+  save_artifacts: true
+  notification_channels: ["slack", "email"]
+
+# Tarefas do workflow
+tasks:
+  - id: "validate_url"
+    name: "Validar URL do Instagram"
+    description: "Valida se a URL fornecida é um vídeo válido do Instagram"
+    agent: "claude-code"
+    priority: "high"
+    estimated_duration: "30s"
+    
+    prompt: |
+      Valide esta URL do Instagram: {{video_url}}
+      
+      Verificações necessárias:
+      1. ✅ URL é do Instagram (instagram.com ou instagr.am)
+      2. ✅ Aponta para um vídeo (reel, IGTV, post com vídeo)
+      3. ✅ URL está acessível e bem formada
+      4. ✅ Não é conteúdo privado ou restrito
+      
+      Use o MCP server instagram-video-analyzer para verificar:
+      ```
+      get_video_info("{{video_url}}")
+      ```
+      
+      Responda apenas:
+      - "✅ VÁLIDA" se tudo estiver correto
+      - "❌ INVÁLIDA: [motivo]" se houver problemas
+      
+      Inclua informações básicas do vídeo se válida.
+    
+    outputs:
+      - name: "validation_result"
+        description: "Resultado da validação"
+      - name: "video_info"
+        description: "Informações básicas do vídeo"
+    
+    success_criteria:
+      - "Validação concluída"
+      - "URL confirmada como válida"
+    
+    error_handling:
+      retry_count: 2
+      fallback_action: "manual_review"
+
+  - id: "analyze_video"
+    name: "Analisar Vídeo com IA"
+    description: "Executa a análise do vídeo usando o MCP server"
+    agent: "claude-code"
+    depends_on: ["validate_url"]
+    priority: "high"
+    estimated_duration: "3-5min"
+    
+    prompt: |
+      Execute a análise do vídeo usando o MCP server instagram-video-analyzer:
+      
+      **Configuração da Análise:**
+      - URL: {{video_url}}
+      - Tipo: {{analysis_type}}
+      - Projeto: {{project_name}}
+      
+      **Comando MCP:**
+      ```
+      analyze_instagram_video(
+        url="{{video_url}}",
+        analysis_type="{{analysis_type}}"
+      )
+      ```
+      
+      **Instruções:**
+      1. 🚀 Inicie a análise usando o comando acima
+      2. ⏳ Monitore o progresso do job
+      3. 📊 Aguarde a conclusão (pode levar alguns minutos)
+      4. ✅ Confirme que a análise foi bem-sucedida
+      5. 📝 Extraia os principais insights
+      
+      **Formato de Resposta:**
+      - Status da análise
+      - Job ID para referência
+      - Resumo dos principais insights
+      - Tempo de processamento
+      
+      Se houver erro, use `get_job_status(job_id)` para diagnosticar.
+    
+    outputs:
+      - name: "analysis_result"
+        description: "Resultado completo da análise"
+      - name: "job_id"
+        description: "ID do job para referência"
+      - name: "insights_summary"
+        description: "Resumo dos principais insights"
+    
+    success_criteria:
+      - "Análise concluída com sucesso"
+      - "Insights extraídos"
+      - "Job ID registrado"
+    
+    error_handling:
+      retry_count: 1
+      timeout_action: "cancel_and_retry"
+      fallback_action: "partial_analysis"
+
+  - id: "generate_report"
+    name: "Gerar Relatório Estruturado"
+    description: "Cria um relatório estruturado com base na análise"
+    agent: "claude-code"
+    depends_on: ["analyze_video"]
+    priority: "medium"
+    estimated_duration: "1-2min"
+    
+    prompt: |
+      Com base na análise do vídeo anterior, crie um relatório estruturado:
+      
+      **Dados da Análise:**
+      - URL: {{video_url}}
+      - Tipo: {{analysis_type}}
+      - Job ID: {{analyze_video.job_id}}
+      - Projeto: {{project_name}}
+      
+      **Estrutura do Relatório ({{output_format}}):**
+      
+      # 📊 Relatório de Análise - {{project_name}}
+      
+      ## 📋 Informações Gerais
+      - **URL**: {{video_url}}
+      - **Tipo de Análise**: {{analysis_type}}
+      - **Data**: [data atual]
+      - **Job ID**: {{analyze_video.job_id}}
+      
+      ## 🎯 Resumo Executivo
+      [Resumo de 2-3 parágrafos dos principais insights]
+      
+      ## 📝 Análise Detalhada
+      [Conteúdo completo da análise organizado por seções]
+      
+      ## 🔍 Insights Principais
+      - [Insight 1]
+      - [Insight 2]
+      - [Insight 3]
+      
+      ## 📊 Métricas e Dados
+      - **Duração do Processamento**: [tempo]
+      - **Modelo IA Usado**: [modelo]
+      - **Tamanho do Arquivo**: [tamanho]
+      
+      ## 💡 Recomendações
+      [Recomendações baseadas na análise]
+      
+      ## 📎 Anexos
+      - Link para análise completa
+      - Dados técnicos
+      
+      Salve como: `relatorio_{{project_name | slug}}_{{timestamp}}.{{output_format}}`
+    
+    outputs:
+      - name: "report_file"
+        description: "Arquivo do relatório gerado"
+      - name: "report_summary"
+        description: "Resumo do relatório"
+    
+    success_criteria:
+      - "Relatório gerado com sucesso"
+      - "Arquivo salvo corretamente"
+      - "Estrutura completa"
+
+  - id: "create_social_content"
+    name: "Criar Conteúdo para Redes Sociais"
+    description: "Gera conteúdo otimizado para diferentes redes sociais"
+    agent: "claude-code"
+    depends_on: ["analyze_video"]
+    priority: "low"
+    estimated_duration: "1min"
+    
+    prompt: |
+      Baseado na análise do vídeo, crie conteúdo otimizado para redes sociais:
+      
+      **Dados da Análise:**
+      {{analyze_video.insights_summary}}
+      
+      **Conteúdo a Criar:**
+      
+      ## 📱 LinkedIn Post (máx 1300 caracteres)
+      [Post profissional destacando insights principais]
+      
+      ## 🐦 Thread Twitter (máx 280 chars por tweet)
+      Tweet 1: [Hook principal]
+      Tweet 2: [Insight 1]
+      Tweet 3: [Insight 2]
+      Tweet 4: [Conclusão + CTA]
+      
+      ## 📺 Descrição YouTube (máx 5000 caracteres)
+      [Descrição detalhada para vídeo de análise]
+      
+      ## 📋 Resumo para Apresentação
+      [Bullet points para slides]
+      
+      **Hashtags Sugeridas:**
+      #VideoAnalysis #InstagramMarketing #AIInsights #ContentStrategy
+      
+      Foque nos insights mais valiosos e actionable.
+    
+    outputs:
+      - name: "social_content"
+        description: "Conteúdo para redes sociais"
+      - name: "hashtags"
+        description: "Hashtags sugeridas"
+    
+    success_criteria:
+      - "Conteúdo criado para todas as plataformas"
+      - "Respeitados os limites de caracteres"
+      - "Hashtags relevantes incluídas"
+
+  - id: "archive_results"
+    name: "Arquivar Resultados"
+    description: "Organiza e arquiva todos os resultados da análise"
+    agent: "claude-code"
+    depends_on: ["generate_report", "create_social_content"]
+    priority: "low"
+    estimated_duration: "30s"
+    
+    prompt: |
+      Organize e arquive todos os resultados da análise:
+      
+      **Estrutura de Arquivos:**
+      ```
+      {{project_name | slug}}/
+      ├── relatorio_principal.{{output_format}}
+      ├── conteudo_redes_sociais.md
+      ├── dados_tecnicos.json
+      ├── insights_principais.txt
+      └── metadados.yml
+      ```
+      
+      **Metadados a Incluir:**
+      - URL original
+      - Tipo de análise
+      - Job ID
+      - Timestamp
+      - Duração total do processo
+      - Status de cada tarefa
+      
+      **Ações:**
+      1. 📁 Criar estrutura de diretórios
+      2. 💾 Salvar todos os arquivos
+      3. 📋 Gerar índice de conteúdo
+      4. ✅ Verificar integridade dos arquivos
+      5. 📊 Atualizar estatísticas do projeto
+      
+      Confirme que todos os arquivos foram salvos corretamente.
+    
+    outputs:
+      - name: "archive_path"
+        description: "Caminho do arquivo"
+      - name: "file_list"
+        description: "Lista de arquivos criados"
+    
+    success_criteria:
+      - "Todos os arquivos arquivados"
+      - "Estrutura de diretórios criada"
+      - "Metadados completos"
+
+# Configurações de notificação
+notifications:
+  on_start:
+    message: "🚀 Iniciando análise de vídeo Instagram: {{video_url}}"
+    channels: ["slack"]
+  
+  on_complete:
+    message: "✅ Análise concluída! Relatório disponível em: {{archive_results.archive_path}}"
+    channels: ["slack", "email"]
+  
+  on_error:
+    message: "❌ Erro na análise: {{error_message}}"
+    channels: ["slack"]
+
+# Métricas e KPIs
+metrics:
+  - name: "tempo_total_processamento"
+    description: "Tempo total do workflow"
+    unit: "minutes"
+  
+  - name: "taxa_sucesso_validacao"
+    description: "Taxa de sucesso na validação de URLs"
+    unit: "percentage"
+  
+  - name: "qualidade_insights"
+    description: "Qualidade dos insights gerados"
+    unit: "score"
+
+# Configurações de cleanup
+cleanup:
+  auto_cleanup: true
+  retention_days: 30
+  archive_completed: true
+  delete_temp_files: true
