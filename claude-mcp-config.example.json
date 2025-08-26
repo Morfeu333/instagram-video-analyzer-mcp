@@ -1,0 +1,29 @@
+{
+  "mcpServers": {
+    "instagram-video-analyzer": {
+      "command": "uv",
+      "args": [
+        "--directory", 
+        "/path/to/instagram-video-analyzer-mcp/mcp-server", 
+        "run", 
+        "instagram-video-analyzer-mcp"
+      ],
+      "env": {
+        "API_BASE_URL": "http://localhost:8000",
+        "LOG_LEVEL": "INFO"
+      }
+    },
+    "gdrive": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@isaacphi/mcp-gdrive"
+      ],
+      "env": {
+        "CLIENT_ID": "your_google_client_id_here",
+        "CLIENT_SECRET": "your_google_client_secret_here",
+        "GDRIVE_CREDS_DIR": "/path/to/your/credentials/directory"
+      }
+    }
+  }
+}
