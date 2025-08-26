@@ -297,6 +297,13 @@ Video-Understander/AI-Videos/
 script_analise_videos_mcp.py
 setup_complete.py
 
+# Large archive files
+*.rar
+*.zip
+*.tar.gz
+*.7z
+Video-Understander.rar
+
 # Backup files
 *.bak
 *.backup
