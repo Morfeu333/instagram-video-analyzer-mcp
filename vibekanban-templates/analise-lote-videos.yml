@@ -1,0 +1,443 @@
+# Template VibeKanban: Análise em Lote de Vídeos Instagram
+# Versão: 1.0.0
+# Descrição: Template para análise de múltiplos vídeos com comparação e insights
+
+name: "Análise em Lote de Vídeos Instagram"
+description: "Analisa múltiplos vídeos do Instagram e gera relatório comparativo"
+version: "1.0.0"
+author: "Instagram Video Analyzer Team"
+tags: ["instagram", "batch", "analysis", "comparison", "ai"]
+
+# Variáveis do template
+variables:
+  - name: "video_urls"
+    description: "Lista de URLs dos vídeos (uma por linha)"
+    type: "text"
+    required: true
+    validation:
+      min_lines: 2
+      max_lines: 10
+      pattern: "^https?://(www\\.)?(instagram\\.com|instagr\\.am)/.+"
+    
+  - name: "project_name"
+    description: "Nome do projeto/campanha"
+    type: "string"
+    required: true
+    default: "Análise Comparativa"
+    
+  - name: "analysis_focus"
+    description: "Foco da análise comparativa"
+    type: "select"
+    required: false
+    default: "comprehensive"
+    options:
+      - value: "comprehensive"
+        label: "Análise Completa"
+      - value: "content_strategy"
+        label: "Estratégia de Conteúdo"
+      - value: "engagement_patterns"
+        label: "Padrões de Engajamento"
+      - value: "visual_trends"
+        label: "Tendências Visuais"
+      - value: "audio_analysis"
+        label: "Análise de Áudio"
+    
+  - name: "comparison_criteria"
+    description: "Critérios de comparação"
+    type: "multiselect"
+    required: false
+    default: ["themes", "visual_style", "engagement"]
+    options:
+      - value: "themes"
+        label: "Temas e Mensagens"
+      - value: "visual_style"
+        label: "Estilo Visual"
+      - value: "engagement"
+        label: "Potencial de Engajamento"
+      - value: "production_quality"
+        label: "Qualidade de Produção"
+      - value: "target_audience"
+        label: "Público-Alvo"
+      - value: "call_to_action"
+        label: "Call-to-Action"
+
+# Tarefas do workflow
+tasks:
+  - id: "parse_urls"
+    name: "Processar Lista de URLs"
+    description: "Valida e organiza a lista de URLs fornecida"
+    agent: "claude-code"
+    priority: "high"
+    estimated_duration: "1min"
+    
+    prompt: |
+      Processe e valide esta lista de URLs do Instagram:
+      
+      ```
+      {{video_urls}}
+      ```
+      
+      **Tarefas:**
+      1. 🔍 Validar cada URL
+      2. 🏷️ Extrair IDs únicos dos vídeos
+      3. 📋 Criar lista estruturada
+      4. ❌ Identificar URLs inválidas
+      5. 📊 Gerar estatísticas da lista
+      
+      **Formato de Saída:**
+      ```json
+      {
+        "valid_urls": [
+          {
+            "id": "video_1",
+            "url": "https://instagram.com/reel/...",
+            "type": "reel"
+          }
+        ],
+        "invalid_urls": [],
+        "total_count": 5,
+        "valid_count": 5,
+        "invalid_count": 0
+      }
+      ```
+      
+      Use o MCP server para validar cada URL:
+      ```
+      get_video_info(url)
+      ```
+      
+      Salve como: `urls_{{project_name | slug}}.json`
+    
+    outputs:
+      - name: "url_list"
+        description: "Lista estruturada de URLs"
+      - name: "validation_stats"
+        description: "Estatísticas de validação"
+
+  - id: "analyze_all_videos"
+    name: "Analisar Todos os Vídeos"
+    description: "Executa análise individual de cada vídeo"
+    agent: "claude-code"
+    depends_on: ["parse_urls"]
+    priority: "high"
+    estimated_duration: "5-15min"
+    
+    prompt: |
+      Execute análise individual para cada vídeo válido da lista:
+      
+      **URLs para Analisar:**
+      {{parse_urls.url_list}}
+      
+      **Configuração:**
+      - Tipo de análise: {{analysis_focus}}
+      - Projeto: {{project_name}}
+      
+      **Processo:**
+      Para cada URL na lista:
+      
+      1. 🚀 Iniciar análise:
+         ```
+         analyze_instagram_video(
+           url=video_url,
+           analysis_type="{{analysis_focus}}"
+         )
+         ```
+      
+      2. ⏳ Monitorar progresso:
+         ```
+         get_job_status(job_id)
+         ```
+      
+      3. 📊 Coletar resultados
+      4. 💾 Salvar resultado individual
+      5. 📈 Atualizar progresso geral
+      
+      **Log de Progresso:**
+      - Vídeo 1/N: [Status] - [Tempo]
+      - Vídeo 2/N: [Status] - [Tempo]
+      - ...
+      
+      **Tratamento de Erros:**
+      - Se um vídeo falhar, continue com os outros
+      - Registre falhas para revisão
+      - Mantenha log detalhado
+      
+      Crie arquivo: `progresso_{{project_name | slug}}.md`
+    
+    outputs:
+      - name: "analysis_results"
+        description: "Resultados de todas as análises"
+      - name: "job_ids"
+        description: "Lista de job IDs"
+      - name: "progress_log"
+        description: "Log de progresso"
+
+  - id: "comparative_analysis"
+    name: "Análise Comparativa"
+    description: "Compara resultados e identifica padrões"
+    agent: "claude-code"
+    depends_on: ["analyze_all_videos"]
+    priority: "high"
+    estimated_duration: "3-5min"
+    
+    prompt: |
+      Execute análise comparativa dos vídeos analisados:
+      
+      **Dados de Entrada:**
+      {{analyze_all_videos.analysis_results}}
+      
+      **Critérios de Comparação:**
+      {{comparison_criteria}}
+      
+      **Análise Comparativa:**
+      
+      ## 📊 Visão Geral
+      - Total de vídeos analisados: [N]
+      - Vídeos com análise completa: [N]
+      - Tempo total de processamento: [tempo]
+      
+      ## 🎯 Comparação por Critérios
+      
+      ### Temas e Mensagens
+      - Temas mais comuns: [lista]
+      - Mensagens principais: [análise]
+      - Variações por vídeo: [comparação]
+      
+      ### Estilo Visual
+      - Padrões visuais identificados: [lista]
+      - Qualidade de produção: [comparação]
+      - Elementos visuais únicos: [análise]
+      
+      ### Potencial de Engajamento
+      - Fatores de engajamento: [análise]
+      - Elementos que geram interesse: [lista]
+      - Recomendações: [insights]
+      
+      ## 🏆 Rankings e Destaques
+      
+      ### Melhor Performance por Categoria
+      1. **Melhor Conteúdo**: [vídeo + justificativa]
+      2. **Melhor Produção**: [vídeo + justificativa]
+      3. **Mais Inovador**: [vídeo + justificativa]
+      
+      ## 📈 Tendências Identificadas
+      - Tendência 1: [descrição + evidências]
+      - Tendência 2: [descrição + evidências]
+      - Tendência 3: [descrição + evidências]
+      
+      ## 💡 Insights Estratégicos
+      - Insight 1: [descrição + aplicação]
+      - Insight 2: [descrição + aplicação]
+      - Insight 3: [descrição + aplicação]
+      
+      ## 🎯 Recomendações
+      ### Para Criação de Conteúdo
+      - [Recomendação específica]
+      - [Recomendação específica]
+      
+      ### Para Estratégia
+      - [Recomendação estratégica]
+      - [Recomendação estratégica]
+      
+      Salve como: `analise_comparativa_{{project_name | slug}}.md`
+    
+    outputs:
+      - name: "comparative_report"
+        description: "Relatório comparativo completo"
+      - name: "key_insights"
+        description: "Principais insights"
+      - name: "recommendations"
+        description: "Recomendações estratégicas"
+
+  - id: "create_dashboard"
+    name: "Criar Dashboard Visual"
+    description: "Gera dashboard com métricas e visualizações"
+    agent: "claude-code"
+    depends_on: ["comparative_analysis"]
+    priority: "medium"
+    estimated_duration: "2min"
+    
+    prompt: |
+      Crie um dashboard visual com os resultados da análise:
+      
+      **Dados:**
+      {{comparative_analysis.comparative_report}}
+      
+      **Dashboard Structure (HTML/CSS):**
+      
+      ```html
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <title>Dashboard - {{project_name}}</title>
+          <style>
+              /* CSS para dashboard responsivo */
+          </style>
+      </head>
+      <body>
+          <header>
+              <h1>📊 Dashboard - {{project_name}}</h1>
+              <p>Análise Comparativa de Vídeos Instagram</p>
+          </header>
+          
+          <main>
+              <section class="overview">
+                  <h2>📈 Visão Geral</h2>
+                  <!-- Métricas principais -->
+              </section>
+              
+              <section class="comparison">
+                  <h2>🔍 Comparação</h2>
+                  <!-- Tabelas comparativas -->
+              </section>
+              
+              <section class="insights">
+                  <h2>💡 Insights</h2>
+                  <!-- Cards com insights -->
+              </section>
+              
+              <section class="recommendations">
+                  <h2>🎯 Recomendações</h2>
+                  <!-- Lista de recomendações -->
+              </section>
+          </main>
+      </body>
+      </html>
+      ```
+      
+      **Elementos a Incluir:**
+      - Métricas principais em cards
+      - Tabela comparativa dos vídeos
+      - Gráficos de tendências (ASCII art)
+      - Lista de insights principais
+      - Seção de recomendações
+      - Links para relatórios detalhados
+      
+      Salve como: `dashboard_{{project_name | slug}}.html`
+    
+    outputs:
+      - name: "dashboard_file"
+        description: "Arquivo HTML do dashboard"
+      - name: "dashboard_url"
+        description: "URL local do dashboard"
+
+  - id: "generate_executive_summary"
+    name: "Gerar Resumo Executivo"
+    description: "Cria resumo executivo para stakeholders"
+    agent: "claude-code"
+    depends_on: ["comparative_analysis"]
+    priority: "medium"
+    estimated_duration: "2min"
+    
+    prompt: |
+      Crie um resumo executivo conciso para stakeholders:
+      
+      **Dados da Análise:**
+      {{comparative_analysis.key_insights}}
+      {{comparative_analysis.recommendations}}
+      
+      **Formato do Resumo Executivo:**
+      
+      # 📋 Resumo Executivo - {{project_name}}
+      
+      ## 🎯 Objetivo
+      Análise comparativa de [N] vídeos do Instagram para identificar padrões, tendências e oportunidades de melhoria.
+      
+      ## 📊 Principais Descobertas
+      
+      ### 🏆 Destaques
+      - **Melhor Performance**: [vídeo + métrica]
+      - **Maior Inovação**: [vídeo + diferencial]
+      - **Melhor Engajamento**: [vídeo + fatores]
+      
+      ### 📈 Tendências Identificadas
+      1. **[Tendência 1]**: [Impacto e evidências]
+      2. **[Tendência 2]**: [Impacto e evidências]
+      3. **[Tendência 3]**: [Impacto e evidências]
+      
+      ## 💡 Insights Estratégicos
+      
+      ### Para Criação de Conteúdo
+      - [Insight acionável]
+      - [Insight acionável]
+      
+      ### Para Estratégia de Marketing
+      - [Insight estratégico]
+      - [Insight estratégico]
+      
+      ## 🎯 Recomendações Imediatas
+      
+      ### Curto Prazo (1-2 semanas)
+      - [ ] [Ação específica]
+      - [ ] [Ação específica]
+      
+      ### Médio Prazo (1-2 meses)
+      - [ ] [Ação estratégica]
+      - [ ] [Ação estratégica]
+      
+      ## 📊 Métricas de Sucesso
+      - [Métrica 1]: [Valor atual] → [Meta]
+      - [Métrica 2]: [Valor atual] → [Meta]
+      
+      ## 📎 Anexos
+      - Relatório completo: [link]
+      - Dashboard interativo: [link]
+      - Dados brutos: [link]
+      
+      ---
+      **Preparado por**: Instagram Video Analyzer AI
+      **Data**: [data atual]
+      **Projeto**: {{project_name}}
+      
+      Salve como: `resumo_executivo_{{project_name | slug}}.md`
+    
+    outputs:
+      - name: "executive_summary"
+        description: "Resumo executivo"
+      - name: "action_items"
+        description: "Lista de ações recomendadas"
+
+# Configurações de notificação
+notifications:
+  on_start:
+    message: "🚀 Iniciando análise em lote: {{project_name}} ({{parse_urls.validation_stats.valid_count}} vídeos)"
+    channels: ["slack"]
+  
+  on_progress:
+    message: "⏳ Progresso: {{analyze_all_videos.progress_log}}"
+    channels: ["slack"]
+    frequency: "every_task"
+  
+  on_complete:
+    message: "✅ Análise em lote concluída! Dashboard: {{create_dashboard.dashboard_url}}"
+    channels: ["slack", "email"]
+  
+  on_error:
+    message: "❌ Erro na análise em lote: {{error_message}}"
+    channels: ["slack"]
+
+# Métricas específicas
+metrics:
+  - name: "videos_analisados"
+    description: "Número de vídeos analisados com sucesso"
+    unit: "count"
+  
+  - name: "taxa_sucesso_analise"
+    description: "Taxa de sucesso das análises"
+    unit: "percentage"
+  
+  - name: "tempo_medio_por_video"
+    description: "Tempo médio de análise por vídeo"
+    unit: "minutes"
+  
+  - name: "insights_gerados"
+    description: "Número de insights únicos gerados"
+    unit: "count"
+
+# Configurações avançadas
+advanced_settings:
+  parallel_analysis: true
+  max_concurrent_videos: 3
+  retry_failed_videos: true
+  save_intermediate_results: true
+  generate_comparison_matrix: true

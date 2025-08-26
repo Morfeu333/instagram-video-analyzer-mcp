@@ -1,0 +1,463 @@
+# Template VibeKanban: Monitoramento Contínuo de Vídeos
+# Versão: 1.0.0
+# Descrição: Template para monitoramento automático e análise contínua
+
+name: "Monitoramento Contínuo de Vídeos Instagram"
+description: "Monitora e analisa automaticamente novos vídeos de contas específicas"
+version: "1.0.0"
+author: "Instagram Video Analyzer Team"
+tags: ["monitoring", "automation", "continuous", "instagram", "analysis"]
+
+# Variáveis do template
+variables:
+  - name: "target_accounts"
+    description: "Contas do Instagram para monitorar (uma por linha)"
+    type: "text"
+    required: true
+    validation:
+      pattern: "^@[a-zA-Z0-9._]+$"
+      message: "Use formato @username"
+    
+  - name: "monitoring_frequency"
+    description: "Frequência de verificação"
+    type: "select"
+    required: false
+    default: "daily"
+    options:
+      - value: "hourly"
+        label: "A cada hora"
+      - value: "daily"
+        label: "Diariamente"
+      - value: "weekly"
+        label: "Semanalmente"
+    
+  - name: "analysis_triggers"
+    description: "Gatilhos para análise automática"
+    type: "multiselect"
+    required: false
+    default: ["new_video", "high_engagement"]
+    options:
+      - value: "new_video"
+        label: "Novo vídeo publicado"
+      - value: "high_engagement"
+        label: "Alto engajamento"
+      - value: "trending_hashtag"
+        label: "Hashtag em trending"
+      - value: "competitor_activity"
+        label: "Atividade de concorrente"
+    
+  - name: "alert_thresholds"
+    description: "Limites para alertas"
+    type: "object"
+    required: false
+    default:
+      engagement_rate: 5.0
+      view_count: 10000
+      comment_rate: 2.0
+    
+  - name: "report_frequency"
+    description: "Frequência de relatórios"
+    type: "select"
+    required: false
+    default: "weekly"
+    options:
+      - value: "daily"
+        label: "Diário"
+      - value: "weekly"
+        label: "Semanal"
+      - value: "monthly"
+        label: "Mensal"
+
+# Tarefas do workflow (executadas em loop)
+tasks:
+  - id: "check_new_content"
+    name: "Verificar Novo Conteúdo"
+    description: "Verifica se há novos vídeos nas contas monitoradas"
+    agent: "claude-code"
+    priority: "high"
+    estimated_duration: "2min"
+    schedule: "{{monitoring_frequency}}"
+    
+    prompt: |
+      Verifique novos vídeos nas contas monitoradas:
+      
+      **Contas para Monitorar:**
+      ```
+      {{target_accounts}}
+      ```
+      
+      **Processo de Verificação:**
+      
+      1. 🔍 Para cada conta na lista:
+         - Verificar últimos posts
+         - Identificar novos vídeos desde última verificação
+         - Coletar metadados básicos
+      
+      2. 📊 Coletar métricas iniciais:
+         - Número de visualizações
+         - Curtidas e comentários
+         - Hashtags utilizadas
+         - Horário de publicação
+      
+      3. 🎯 Aplicar filtros de gatilho:
+         ```
+         Gatilhos ativos: {{analysis_triggers}}
+         ```
+      
+      4. 📋 Gerar lista de vídeos para análise:
+         ```json
+         {
+           "new_videos": [
+             {
+               "account": "@username",
+               "url": "https://instagram.com/reel/...",
+               "published_at": "2024-01-15T10:30:00Z",
+               "initial_metrics": {
+                 "views": 1500,
+                 "likes": 120,
+                 "comments": 15
+               },
+               "triggers": ["new_video"],
+               "priority": "high"
+             }
+           ],
+           "total_found": 3,
+           "requires_analysis": 2
+         }
+         ```
+      
+      **Critérios de Priorização:**
+      - Alto engajamento inicial
+      - Hashtags trending
+      - Horário de publicação estratégico
+      - Tipo de conteúdo (reel vs post)
+      
+      Salve como: `novos_videos_{{timestamp}}.json`
+    
+    outputs:
+      - name: "new_videos_list"
+        description: "Lista de novos vídeos encontrados"
+      - name: "analysis_queue"
+        description: "Fila de vídeos para análise"
+    
+    success_criteria:
+      - "Verificação concluída para todas as contas"
+      - "Novos vídeos identificados"
+      - "Fila de análise atualizada"
+
+  - id: "auto_analyze_priority"
+    name: "Análise Automática Prioritária"
+    description: "Analisa automaticamente vídeos de alta prioridade"
+    agent: "claude-code"
+    depends_on: ["check_new_content"]
+    priority: "high"
+    estimated_duration: "5-10min"
+    condition: "{{check_new_content.analysis_queue.length > 0}}"
+    
+    prompt: |
+      Execute análise automática dos vídeos prioritários:
+      
+      **Fila de Análise:**
+      {{check_new_content.analysis_queue}}
+      
+      **Processo de Análise:**
+      
+      Para cada vídeo na fila de prioridade:
+      
+      1. 🚀 Iniciar análise rápida:
+         ```
+         analyze_instagram_video(
+           url=video_url,
+           analysis_type="summary"  # Análise rápida para monitoramento
+         )
+         ```
+      
+      2. ⚡ Análise express (foco em):
+         - Tema principal
+         - Elementos visuais chave
+         - Potencial de engajamento
+         - Hashtags e tendências
+      
+      3. 🎯 Detectar padrões importantes:
+         - Mudanças na estratégia de conteúdo
+         - Novos formatos ou estilos
+         - Colaborações ou parcerias
+         - Campanhas ou promoções
+      
+      4. 🚨 Gerar alertas se necessário:
+         - Conteúdo viral potencial
+         - Mudança significativa na estratégia
+         - Oportunidade de resposta rápida
+         - Ameaça competitiva
+      
+      **Formato de Resultado:**
+      ```json
+      {
+        "analyzed_videos": [
+          {
+            "url": "...",
+            "account": "@username",
+            "analysis_summary": "...",
+            "key_insights": ["insight1", "insight2"],
+            "alert_level": "medium",
+            "recommended_actions": ["action1", "action2"]
+          }
+        ],
+        "alerts_generated": 2,
+        "total_processed": 3
+      }
+      ```
+      
+      Salve como: `analise_automatica_{{timestamp}}.json`
+    
+    outputs:
+      - name: "analysis_results"
+        description: "Resultados das análises automáticas"
+      - name: "alerts"
+        description: "Alertas gerados"
+      - name: "recommended_actions"
+        description: "Ações recomendadas"
+
+  - id: "trend_detection"
+    name: "Detecção de Tendências"
+    description: "Identifica tendências emergentes nos vídeos analisados"
+    agent: "claude-code"
+    depends_on: ["auto_analyze_priority"]
+    priority: "medium"
+    estimated_duration: "3min"
+    
+    prompt: |
+      Analise tendências emergentes com base nos dados coletados:
+      
+      **Dados de Entrada:**
+      {{auto_analyze_priority.analysis_results}}
+      
+      **Análise de Tendências:**
+      
+      ## 📈 Detecção de Padrões
+      
+      ### Tendências de Conteúdo
+      - Temas recorrentes: [análise]
+      - Formatos populares: [análise]
+      - Estilos visuais: [análise]
+      
+      ### Tendências de Engajamento
+      - Horários de maior engajamento: [análise]
+      - Tipos de conteúdo com melhor performance: [análise]
+      - Hashtags em ascensão: [análise]
+      
+      ### Tendências Competitivas
+      - Estratégias dos concorrentes: [análise]
+      - Gaps de oportunidade: [análise]
+      - Ameaças emergentes: [análise]
+      
+      ## 🎯 Insights Acionáveis
+      
+      ### Oportunidades Imediatas
+      - [Oportunidade 1]: [Descrição + Ação]
+      - [Oportunidade 2]: [Descrição + Ação]
+      
+      ### Riscos Identificados
+      - [Risco 1]: [Descrição + Mitigação]
+      - [Risco 2]: [Descrição + Mitigação]
+      
+      ## 📊 Métricas de Tendência
+      - Velocidade de crescimento: [métrica]
+      - Saturação do mercado: [métrica]
+      - Potencial de viralização: [métrica]
+      
+      **Algoritmo de Detecção:**
+      1. Comparar com dados históricos
+      2. Identificar mudanças significativas
+      3. Calcular velocidade de adoção
+      4. Prever duração da tendência
+      
+      Salve como: `tendencias_{{timestamp}}.md`
+    
+    outputs:
+      - name: "trend_report"
+        description: "Relatório de tendências"
+      - name: "opportunities"
+        description: "Oportunidades identificadas"
+      - name: "risks"
+        description: "Riscos identificados"
+
+  - id: "generate_alerts"
+    name: "Gerar Alertas Inteligentes"
+    description: "Cria alertas baseados em thresholds e padrões"
+    agent: "claude-code"
+    depends_on: ["trend_detection"]
+    priority: "high"
+    estimated_duration: "1min"
+    
+    prompt: |
+      Gere alertas inteligentes baseados nos dados analisados:
+      
+      **Dados para Alertas:**
+      - Análises: {{auto_analyze_priority.analysis_results}}
+      - Tendências: {{trend_detection.opportunities}}
+      - Riscos: {{trend_detection.risks}}
+      
+      **Thresholds Configurados:**
+      {{alert_thresholds}}
+      
+      **Tipos de Alerta:**
+      
+      ### 🚨 Alertas Críticos (Ação Imediata)
+      - Conteúdo viral emergente
+      - Crise de reputação potencial
+      - Oportunidade de trending
+      - Ameaça competitiva direta
+      
+      ### ⚠️ Alertas Importantes (Ação em 24h)
+      - Mudança na estratégia de concorrente
+      - Nova tendência emergente
+      - Queda no engajamento
+      - Oportunidade de colaboração
+      
+      ### ℹ️ Alertas Informativos (Monitorar)
+      - Mudanças graduais em métricas
+      - Novos formatos de conteúdo
+      - Alterações em hashtags
+      - Padrões sazonais
+      
+      **Formato de Alerta:**
+      ```json
+      {
+        "alert_id": "alert_{{timestamp}}",
+        "level": "critical|important|info",
+        "title": "Título do alerta",
+        "description": "Descrição detalhada",
+        "data_source": "URL ou referência",
+        "recommended_action": "Ação específica",
+        "urgency": "immediate|24h|monitor",
+        "stakeholders": ["marketing", "content", "social"]
+      }
+      ```
+      
+      **Canais de Notificação:**
+      - Críticos: Slack + Email + SMS
+      - Importantes: Slack + Email
+      - Informativos: Dashboard + Email semanal
+      
+      Gere apenas alertas relevantes e acionáveis.
+    
+    outputs:
+      - name: "alerts_generated"
+        description: "Alertas gerados"
+      - name: "notification_queue"
+        description: "Fila de notificações"
+
+  - id: "update_dashboard"
+    name: "Atualizar Dashboard de Monitoramento"
+    description: "Atualiza dashboard em tempo real com novos dados"
+    agent: "claude-code"
+    depends_on: ["generate_alerts"]
+    priority: "low"
+    estimated_duration: "1min"
+    
+    prompt: |
+      Atualize o dashboard de monitoramento com os novos dados:
+      
+      **Dados para Dashboard:**
+      - Novos vídeos: {{check_new_content.new_videos_list}}
+      - Análises: {{auto_analyze_priority.analysis_results}}
+      - Tendências: {{trend_detection.trend_report}}
+      - Alertas: {{generate_alerts.alerts_generated}}
+      
+      **Seções do Dashboard:**
+      
+      ### 📊 Visão Geral
+      - Total de contas monitoradas: [N]
+      - Novos vídeos hoje: [N]
+      - Análises realizadas: [N]
+      - Alertas ativos: [N]
+      
+      ### 📈 Métricas em Tempo Real
+      - Engajamento médio: [%]
+      - Vídeos virais: [N]
+      - Tendências ativas: [N]
+      - Performance vs. ontem: [+/-]
+      
+      ### 🎯 Alertas Ativos
+      [Lista de alertas por prioridade]
+      
+      ### 📋 Ações Recomendadas
+      [Lista de ações prioritárias]
+      
+      ### 📊 Gráficos e Visualizações
+      - Timeline de atividade
+      - Heatmap de engajamento
+      - Gráfico de tendências
+      - Comparativo de contas
+      
+      **Formato de Atualização:**
+      - Atualizar dados em tempo real
+      - Manter histórico de 30 dias
+      - Destacar mudanças significativas
+      - Incluir timestamps de última atualização
+      
+      Salve como: `dashboard_data_{{timestamp}}.json`
+    
+    outputs:
+      - name: "dashboard_data"
+        description: "Dados atualizados do dashboard"
+      - name: "dashboard_url"
+        description: "URL do dashboard atualizado"
+
+# Configurações de agendamento
+schedule:
+  type: "recurring"
+  frequency: "{{monitoring_frequency}}"
+  start_time: "09:00"
+  timezone: "America/Sao_Paulo"
+  max_runtime: "30min"
+
+# Configurações de notificação
+notifications:
+  critical_alerts:
+    channels: ["slack", "email", "sms"]
+    immediate: true
+    
+  important_alerts:
+    channels: ["slack", "email"]
+    delay: "5min"
+    
+  info_alerts:
+    channels: ["dashboard"]
+    batch: true
+    frequency: "daily"
+    
+  system_status:
+    channels: ["slack"]
+    frequency: "weekly"
+    message: "📊 Relatório semanal de monitoramento: {{dashboard_url}}"
+
+# Métricas de monitoramento
+metrics:
+  - name: "contas_monitoradas"
+    description: "Número de contas sendo monitoradas"
+    unit: "count"
+  
+  - name: "videos_detectados"
+    description: "Novos vídeos detectados por período"
+    unit: "count"
+  
+  - name: "taxa_analise_automatica"
+    description: "Taxa de sucesso da análise automática"
+    unit: "percentage"
+  
+  - name: "alertas_gerados"
+    description: "Número de alertas gerados por período"
+    unit: "count"
+  
+  - name: "tempo_resposta_alertas"
+    description: "Tempo médio de resposta a alertas"
+    unit: "minutes"
+
+# Configurações de retenção
+data_retention:
+  raw_data: "90 days"
+  analysis_results: "1 year"
+  dashboard_data: "30 days"
+  alerts: "6 months"

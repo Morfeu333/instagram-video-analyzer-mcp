@@ -1,0 +1,214 @@
+##FASE 3 — Ativação de Agentes de Inteligência de Tendências (VERSÃO REVISADA)
+
+Descrição: IA aciona múltiplos agentes de busca e inteligência para mapear tendências, conteúdos em alta e gaps de conteúdo nas plataformas onde o mentorado atuará, utilizando Apify actors viáveis e ferramentas de web scraping customizado.
+
+AGENTES PRINCIPAIS (10 Fontes Viáveis)
+
+1. YouTube Trends
+
+Apify Actor: streamers/youtube-scraper
+
+Configuração: Buscar por termos do nicho + filtro "Popular" + últimos 7 dias
+
+Dados Extraídos: Títulos, visualizações, engagement, thumbnails, duração
+
+N8N Integration: Workflow automático diário para coletar trending por nicho
+
+2. TikTok Trending Topics
+
+Apify Actor: clockworks/tiktok-scraper
+
+Configuração: Hashtags do nicho + filtro "últimos 7 dias" + minimum engagement
+
+Dados Extraídos: Hashtags em alta, músicas trending, desafios, engagement metrics
+
+Limitações: Pode precisar de proxy brasileiro para conteúdo local
+
+3. Instagram Reels & Explorar
+
+Apify Actor: Usar web scraping customizado (Instagram bloqueia a maioria dos actors)
+
+Alternativa Viável: Playwright + N8N workflow para:
+
+Acessar página de hashtags do nicho
+
+Extrair posts recentes com maior engagement
+
+Coletar trending hashtags relacionadas
+
+Fetch Alternative: Usar web_fetch para páginas públicas de hashtags
+
+4. LinkedIn Top Articles
+
+Apify Actor: curious_coder/linkedin-post-search-scraper
+
+Configuração: Buscar por keywords do nicho + filtro "Popular" + última semana
+
+Dados Extraídos: Posts mais engajados, artigos compartilhados, discussões em alta
+
+Requere: Cookies de LinkedIn válidos para funcionar
+
+5. Google Trends
+
+Apify Actor: google-trends-scraper (se disponível no store)
+
+Alternativa Viável: Playwright workflow para acessar trends.google.com.br
+
+Automatizar busca por termos do nicho
+
+Extrair "Consultas em ascensão" e "Tópicos em alta"
+
+Coletar dados regionais (Brasil)
+
+N8N: Workflow semanal para atualizar trends por nicho
+
+6. Reddit (Subreddits por Nicho)
+
+Apify Actor: reddit-scraper
+
+Configuração: Subreddits relevantes + posts "Hot" e "Top" da semana
+
+Subreddits Brasileiros: /r/brasil, /r/investimentos, /r/empreendedorismo etc
+
+Dados Extraídos: Posts virais, discussões engajadas, perguntas frequentes
+
+7. Blogs Especializados (RSS + Web Scraping)
+
+Approach: Combinação de RSS + Playwright
+
+Fontes Viáveis:
+
+Exame: https://exame.com/feed/
+
+Época Negócios: https://epocanegocios.globo.com/rss.xml
+
+StartSe: https://www.startse.com/feed/
+
+Rock Content: https://rockcontent.com/br/feed/
+
+Apify Actor: website-content-crawler para blogs sem RSS
+
+Playlist Strategy: Criar lista de 50+ blogs por nicho principal
+
+8. Sites de Notícias Segmentadas
+
+Apify Actor: web-scraper (genérico) + configuração customizada
+
+Alvos Específicos:
+
+MIT Technology Review Brasil (se existir)
+
+TechCrunch Brasil: https://techcrunch.com/tag/brazil/
+
+InfoMoney: Para nicho financeiro
+
+B9: Para nicho tecnologia
+
+Playwright Alternative: Scraping customizado para sites protegidos
+
+9. Agregadores Científicos (Limitados mas Úteis)
+
+PubMed: Usar web_fetch para acessar via URL direta
+
+Format: https://pubmed.ncbi.nlm.nih.gov/?term=KEYWORD&sort=date
+
+Google Scholar: Playwright workflow (sem API oficial)
+
+Automatizar busca por termos do nicho
+
+Extrair papers recentes mais citados
+
+ResearchGate: Web scraping para papers em português
+
+10. Ferramentas SEO Alternativas (Gratuitas)
+
+AnswerThePublic: Playwright scraping
+
+answerthepublic.com/search/KEYWORD
+
+Extrair perguntas populares por nicho
+
+Ubersuggest Free: Playwright workflow
+
+Versão gratuita para keywords básicas
+
+Google "People Also Ask": Apify Actor: serp-scraper
+
+Configurar para extrair PAA boxes por termo do nicho
+
+{
+
+  "daily_trend_collector": {
+
+    "triggers": ["cron: 0 6  *"],
+
+    "nodes": [
+
+      "fetch_youtube_trends",
+
+      "scrape_tiktok_hashtags", 
+
+      "get_reddit_hot_posts",
+
+      "analyze_google_trends",
+
+      "collect_rss_feeds",
+
+      "playwright_instagram_scraping",
+
+      "consolidate_data",
+
+      "filter_by_mentee_niche",
+
+      "generate_opportunities_report"
+
+    ]
+
+  }
+
+}
+
+// Instagram Hashtag Scraper
+
+async function scrapeInstagramHashtag(hashtag) {
+
+  // Navigate to hashtag page
+
+  // Extract recent posts metadata
+
+  // Return trending content
+
+}
+
+// Google Trends Extractor  
+
+async function getGoogleTrends(keywords) {
+
+  // Access trends.google.com
+
+  // Extract rising queries
+
+  // Return trend data
+
+}
+
+Apify Actor Integration:
+
+actors-mcp-server: Para executar actors via MCP
+
+Rate Limiting: Configurar delays entre requests
+
+Proxy Management: Usar proxies brasileiros quando necessário
+
+Error Handling: Fallback para Playwright quando actors falham
+
+FONTES DIFÍCEIS DE ACESSAR (Estratégias Alternativas)
+
+Alta Dificuldade mas Alto Valor:
+
+Instagram Stories Trending: Manual tracking only
+
+TikTok Algorithm Insights: Impossível sem acesso interno
+
+LinkedIn Feed Algorithm: Limitado a posts públicos
+

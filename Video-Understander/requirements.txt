@@ -1,0 +1,48 @@
+# Core dependencies
+google-generativeai>=0.8.0
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+python-dotenv>=1.0.0
+
+# Video processing
+opencv-python>=4.8.0
+ffmpeg-python>=0.2.0
+moviepy>=1.0.3
+
+# Video downloading
+yt-dlp>=2023.12.30
+instaloader>=4.14.0
+requests>=2.31.0
+httpx>=0.25.0
+
+# File handling
+aiofiles>=23.1.0
+pathlib2>=2.3.7
+python-magic>=0.4.27
+
+# MCP Protocol
+mcp>=1.0.0
+websockets>=12.0
+asyncio-mqtt>=0.16.0
+
+# Database (optional)
+sqlalchemy>=2.0.0
+
+# Utilities
+click>=8.1.0
+rich>=13.0.0
+tqdm>=4.66.0
+python-dateutil>=2.8.0
+validators>=0.22.0
+
+# Development dependencies
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.5.0
+
+# Optional AI enhancements
+openai>=1.0.0  # For fallback or comparison
+anthropic>=0.7.0  # For additional AI capabilities
