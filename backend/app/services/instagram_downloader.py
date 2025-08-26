@@ -21,6 +21,7 @@ class InstagramDownloader:
     
     def __init__(self):
         """Initialize the Instagram downloader."""
+        self.logged_in = False
         self.loader = instaloader.Instaloader(
             download_pictures=False,
             download_videos=True,
@@ -31,13 +32,22 @@ class InstagramDownloader:
             compress_json=False,
         )
         
-        # Login if credentials are provided
-        if settings.instagram_username and settings.instagram_password:
+        # Login if credentials are provided and valid
+        if (settings.instagram_username and
+            settings.instagram_password and
+            settings.instagram_username != "seu_usuario_aqui" and
+            settings.instagram_password != "sua_senha_aqui"):
             try:
                 self.loader.login(settings.instagram_username, settings.instagram_password)
                 logger.info("Successfully logged into Instagram")
+                self.logged_in = True
             except Exception as e:
                 logger.warning(f"Failed to login to Instagram: {e}")
+                logger.info("Continuing without login (limited functionality)")
+                self.logged_in = False
+        else:
+            logger.info("No valid Instagram credentials provided, running without login")
+            self.logged_in = False
     
     def extract_shortcode_from_url(self, url: str) -> Optional[str]:
         """

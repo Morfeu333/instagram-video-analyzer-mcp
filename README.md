@@ -2,6 +2,17 @@
 
 A comprehensive Model Context Protocol (MCP) server for analyzing Instagram videos using AI. This server enables Claude and other LLMs to analyze Instagram content with advanced AI capabilities including transcription, visual analysis, and content insights.
 
+## 🎯 **What This Does**
+
+Transform Instagram videos into actionable insights using AI:
+- **📝 Transcription**: Convert speech to text with timestamps
+- **👁️ Visual Analysis**: Detailed scene-by-scene descriptions
+- **🧠 Content Insights**: Extract key themes, emotions, and engagement factors
+- **📊 Performance Metrics**: Track analysis jobs and system health
+- **🔄 Real-time Processing**: Monitor progress with live updates
+
+**Perfect for**: Content creators, marketers, researchers, and AI enthusiasts who need to analyze Instagram video content at scale.
+
 ## 🌟 Features
 
 ### 🛠️ **6 Powerful Tools**
@@ -27,27 +38,34 @@ A comprehensive Model Context Protocol (MCP) server for analyzing Instagram vide
 
 ### Prerequisites
 - Python 3.11+
-- Instagram Video Analyzer API running on `localhost:8000`
+- Google AI API Key (for Gemini)
 - Claude Code or compatible MCP client
+- FFmpeg (for video processing)
 
-### Installation
+### ⚡ 5-Minute Setup
 
-1. **Clone the repository:**
+1. **Clone and setup:**
 ```bash
-git clone https://github.com/yourusername/instagram-video-analyzer-mcp.git
+git clone https://github.com/Morfeu333/instagram-video-analyzer-mcp.git
 cd instagram-video-analyzer-mcp
 ```
 
-2. **Install dependencies:**
+2. **Start the backend:**
+```bash
+cd backend
+pip install -r requirements.txt
+# Add your GOOGLE_API_KEY to .env file
+python -m app.main
+```
+
+3. **Install and run MCP server:**
 ```bash
 cd mcp-server
 uv sync
-```
-
-3. **Start the MCP server:**
-```bash
 uv run instagram-video-analyzer-mcp
 ```
+
+4. **Configure Claude Code** (see [Installation Guide](INSTALLATION_GUIDE.md) for details)
 
 ### Claude Code Configuration
 
@@ -74,25 +92,37 @@ Add to your Claude Code configuration file:
 
 ## 📖 Usage Examples
 
-### Basic Video Analysis
+### 🎬 Basic Video Analysis
 ```
 Analyze this Instagram video: https://www.instagram.com/reel/DMiEEmlMI7J/
 ```
+**Result**: Complete transcription + visual analysis + content insights
 
-### Transcription Only
+### 📝 Transcription Only
 ```
 Get only the transcription of this video: https://www.instagram.com/reel/DMiEEmlMI7J/
 ```
+**Result**: Timestamped speech-to-text conversion
 
-### Scene-by-Scene Analysis
+### 👁️ Visual Analysis
 ```
-Analyze this video with detailed scene description for each spoken phrase: https://www.instagram.com/reel/DMiEEmlMI7J/
+Describe the visual content of this video: https://www.instagram.com/reel/DMiEEmlMI7J/
+```
+**Result**: Scene-by-scene visual descriptions
+
+### 📊 Batch Analysis
+```
+Analyze these 5 Instagram videos and compare their content themes:
+- https://www.instagram.com/reel/video1/
+- https://www.instagram.com/reel/video2/
+- https://www.instagram.com/reel/video3/
 ```
 
-### System Monitoring
+### 🔍 System Monitoring
 ```
 Show me the system statistics and recent analyses
 ```
+**Result**: Performance metrics, job history, disk usage
 
 ## 🔧 API Reference
 
@@ -246,15 +276,29 @@ uv run pytest tests/ -v
 
 ```
 instagram-video-analyzer-mcp/
-├── mcp-server/
-│   ├── instagram_video_analyzer_mcp.py  # Main MCP server
-│   ├── pyproject.toml                   # Dependencies
-│   ├── tests/                          # Test suite
-│   └── README.md                       # Server documentation
-├── docs/                               # Documentation
-├── vibekanban-templates/              # Automation templates
-├── setup_complete.py                 # Installation script
-└── README.md                         # This file
+├── 📂 backend/                        # FastAPI backend server
+│   ├── app/
+│   │   ├── main.py                    # FastAPI application
+│   │   ├── database.py                # Database configuration
+│   │   ├── models/                    # SQLAlchemy models
+│   │   └── services/                  # AI analysis services
+│   ├── requirements.txt
+│   └── .env                          # Environment variables
+├── 📂 mcp-server/                     # MCP bridge server
+│   ├── instagram_video_analyzer_mcp.py
+│   ├── pyproject.toml
+│   └── tests/
+├── 📂 data/                          # Storage directories
+│   ├── videos/                       # Downloaded Instagram videos
+│   ├── results/                      # Analysis results
+│   └── temp/                         # Temporary processing files
+├── 📂 docs/                          # Documentation
+├── 📂 frontend/                      # Optional React frontend
+├── 📂 vibekanban-templates/          # Automation workflows
+├── 📄 README.md                      # This file
+├── 📄 INSTALLATION_GUIDE.md          # Setup instructions
+├── 📄 TECHNICAL_DOCUMENTATION.md     # Technical details
+└── 📄 LICENSE                        # MIT License
 ```
 
 ## 🤝 Contributing
@@ -270,11 +314,18 @@ instagram-video-analyzer-mcp/
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 📚 Documentation
+
+- **📖 [Installation Guide](INSTALLATION_GUIDE.md)** - Complete setup instructions
+- **🔧 [Technical Documentation](TECHNICAL_DOCUMENTATION.md)** - Architecture and API details
+- **🎯 [Usage Examples](README.md#usage-examples)** - Common use cases
+- **🐛 [Troubleshooting](TECHNICAL_DOCUMENTATION.md#troubleshooting)** - Common issues and solutions
+
 ## 🆘 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/instagram-video-analyzer-mcp/issues)
-- **Documentation**: [Full Documentation](docs/)
-- **Examples**: [Usage Examples](examples/)
+- **🐛 Issues**: [GitHub Issues](https://github.com/Morfeu333/instagram-video-analyzer-mcp/issues)
+- **💬 Discussions**: [GitHub Discussions](https://github.com/Morfeu333/instagram-video-analyzer-mcp/discussions)
+- **📧 Contact**: Create an issue for support requests
 
 ## 🎉 Acknowledgments
 

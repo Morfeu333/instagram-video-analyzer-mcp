@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .core.config import settings
-from .core.database import create_tables
+from .database import init_db
 from .api.routes import video_router, jobs_router
 
 # Configure logging
@@ -32,9 +32,9 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting Instagram Video Analyzer API")
     
-    # Create database tables
-    create_tables()
-    logger.info("Database tables created")
+    # Initialize database
+    init_db()
+    logger.info("Database initialized")
     
     yield
     

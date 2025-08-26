@@ -240,16 +240,34 @@ temp/
 # Project specific
 downloads/
 videos/
+data/videos/
+data/results/
+data/temp/
+data/cache/
 *.mp4
 *.avi
 *.mov
 *.mkv
 *.webm
+*.m4v
+*.3gp
+*.flv
+*.wmv
+
+# Audio files
+*.mp3
+*.wav
+*.aac
+*.ogg
+*.flac
+*.m4a
 
 # Database
 *.db
 *.sqlite
 *.sqlite3
+backend/video_analyzer.db
+backend/app.log
 
 # API Keys and secrets
 .env.local
@@ -258,17 +276,29 @@ videos/
 .env.production.local
 config/secrets.json
 secrets/
+*.key
+*.pem
 
 # MCP Server specific
 mcp-server/.venv/
 mcp-server/dist/
 mcp-server/build/
+mcp-server/__pycache__/
+uv.lock
 
 # VibeKanban
 vibe-project/
 *.kanban
 
+# Project reports and documentation
+relatorio_*.md
+AI-Transcrips/
+Video-Understander/AI-Videos/
+script_analise_videos_mcp.py
+setup_complete.py
+
 # Backup files
 *.bak
 *.backup
 *.old
+*~
