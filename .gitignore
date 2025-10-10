@@ -312,6 +312,7 @@ Video-Understander.rar
 
 # Claude AI settings (user-specific)
 .claude/
+claude-mcp-config.json
 
 # Generated transcriptions and analysis
 transcription_*.md
