@@ -309,3 +309,14 @@ Video-Understander.rar
 *.backup
 *.old
 *~
+
+# Claude AI settings (user-specific)
+.claude/
+
+# Generated transcriptions and analysis
+transcription_*.md
+analise_video_instagram_*.md
+
+# Temporary files
+nul
+tutorialvideon8n.txt
