@@ -206,8 +206,83 @@ class VideoAnalyzer:
                 3. Cores, iluminação e estilo visual
                 4. Movimentos de câmera e transições
                 5. Texto ou gráficos visíveis
-                
+
                 Seja específico e detalhado na descrição visual.
+            """,
+
+            "project_management": """
+                Você é um especialista em gestão de projetos técnicos. Analise este vídeo de reunião
+                e extraia TODAS as informações relevantes para gestão de projetos de software/aplicações.
+
+                Forneça sua análise nas seguintes seções obrigatórias:
+
+                ## 1. CONTEXTO DA REUNIÃO
+                - Participantes (nomes, papéis/funções)
+                - Data e duração
+                - Objetivo principal da reunião
+                - Tipo: kickoff, sprint planning, review, daily, brainstorm, técnica, etc.
+
+                ## 2. DECISÕES TOMADAS
+                Para cada decisão identificada:
+                - [DECISÃO]: Descrição clara da decisão
+                - [TIMESTAMP]: Momento no vídeo (MM:SS)
+                - [RESPONSÁVEL]: Quem tomou ou propôs a decisão
+                - [IMPACTO]: Alto/Médio/Baixo
+
+                ## 3. ACTION ITEMS / TAREFAS
+                Para cada tarefa identificada:
+                - [TAREFA]: Descrição clara e acionável
+                - [RESPONSÁVEL]: Quem deve executar
+                - [PRAZO]: Se mencionado, ou "Não definido"
+                - [PRIORIDADE]: Alta/Média/Baixa
+                - [DEPENDÊNCIAS]: Outras tarefas ou recursos necessários
+                - [TIMESTAMP]: Momento no vídeo onde foi discutida
+
+                ## 4. REQUISITOS TÉCNICOS
+                Para cada requisito identificado:
+                - [REQ]: Descrição do requisito
+                - [TIPO]: Funcional / Não-funcional / Infraestrutura / Integração
+                - [STACK/TECNOLOGIAS]: Tecnologias mencionadas
+                - [COMPLEXIDADE]: Alta/Média/Baixa
+
+                ## 5. ARQUITETURA E INFRAESTRUTURA
+                - Sistemas, plataformas e ferramentas mencionados
+                - Integrações necessárias
+                - Ambientes (dev, staging, prod)
+                - Custos ou estimativas mencionados
+                - Diagramas ou fluxos descritos
+
+                ## 6. RISCOS E BLOQUEIOS
+                - Riscos identificados durante a discussão
+                - Bloqueios atuais mencionados
+                - Dependências externas
+                - Preocupações levantadas pelos participantes
+
+                ## 7. MODELO DE NEGÓCIO / ESCOPO DO PROJETO
+                - Escopo do projeto discutido
+                - Modelo de negócio (se mencionado): SaaS, licença, contrato, etc.
+                - Público-alvo / stakeholders
+                - Métricas de sucesso ou KPIs mencionados
+                - Estimativas de custo ou valor
+
+                ## 8. PRÓXIMOS PASSOS
+                - Ações imediatas acordadas
+                - Próxima reunião ou checkpoint
+                - Entregas esperadas
+                - Pontos em aberto que precisam de resolução
+
+                ## 9. RESUMO EXECUTIVO
+                - Resumo de 3-5 frases com os pontos mais importantes
+                - Status geral do projeto: Início / Em andamento / Em risco / Concluído
+
+                REGRAS:
+                - Extraia APENAS informações explicitamente mencionadas no vídeo
+                - Use timestamps precisos (MM:SS) sempre que possível
+                - Se algo não foi discutido, indique "Não abordado nesta reunião"
+                - Priorize informações acionáveis sobre discussões genéricas
+                - Identifique compromissos verbais como action items
+                - Formate em Markdown limpo e estruturado
+                - Responda em Português (Brasil)
             """
         }
         
@@ -227,10 +302,9 @@ class VideoAnalyzer:
         # Basic parsing - can be enhanced with more sophisticated NLP
         sections = {}
         
+        import re
+
         if analysis_type == "comprehensive":
-            # Try to extract sections based on headers
-            import re
-            
             patterns = {
                 "resumo": r"\*\*Resumo Geral\*\*:?\s*(.*?)(?=\*\*|$)",
                 "visual": r"\*\*Análise Visual\*\*:?\s*(.*?)(?=\*\*|$)",
@@ -239,8 +313,24 @@ class VideoAnalyzer:
                 "timestamps": r"\*\*Timestamps Importantes\*\*:?\s*(.*?)(?=\*\*|$)",
                 "insights": r"\*\*Insights e Análise\*\*:?\s*(.*?)(?=\*\*|$)"
             }
-            
             for key, pattern in patterns.items():
+                match = re.search(pattern, response_text, re.DOTALL | re.IGNORECASE)
+                if match:
+                    sections[key] = match.group(1).strip()
+
+        elif analysis_type == "project_management":
+            pm_patterns = {
+                "contexto": r"##\s*1\.\s*CONTEXTO DA REUNIÃO\s*(.*?)(?=##\s*2\.|$)",
+                "decisoes": r"##\s*2\.\s*DECISÕES TOMADAS\s*(.*?)(?=##\s*3\.|$)",
+                "action_items": r"##\s*3\.\s*ACTION ITEMS\s*/\s*TAREFAS\s*(.*?)(?=##\s*4\.|$)",
+                "requisitos_tecnicos": r"##\s*4\.\s*REQUISITOS TÉCNICOS\s*(.*?)(?=##\s*5\.|$)",
+                "arquitetura": r"##\s*5\.\s*ARQUITETURA E INFRAESTRUTURA\s*(.*?)(?=##\s*6\.|$)",
+                "riscos": r"##\s*6\.\s*RISCOS E BLOQUEIOS\s*(.*?)(?=##\s*7\.|$)",
+                "modelo_negocio": r"##\s*7\.\s*MODELO DE NEGÓCIO\s*/\s*ESCOPO\s*(.*?)(?=##\s*8\.|$)",
+                "proximos_passos": r"##\s*8\.\s*PRÓXIMOS PASSOS\s*(.*?)(?=##\s*9\.|$)",
+                "resumo_executivo": r"##\s*9\.\s*RESUMO EXECUTIVO\s*(.*?)$",
+            }
+            for key, pattern in pm_patterns.items():
                 match = re.search(pattern, response_text, re.DOTALL | re.IGNORECASE)
                 if match:
                     sections[key] = match.group(1).strip()
