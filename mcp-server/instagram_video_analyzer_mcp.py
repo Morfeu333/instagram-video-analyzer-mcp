@@ -510,6 +510,7 @@ async def _upload_and_analyze_gemini(
     video_path: str,
     prompt: str,
     ctx: Context,
+    media_resolution: str = "default",
 ) -> Dict[str, Any]:
     """
     Faz upload de um vídeo para o Gemini File API e executa análise.
@@ -518,11 +519,13 @@ async def _upload_and_analyze_gemini(
         video_path: Caminho para o arquivo de vídeo
         prompt: Prompt de análise
         ctx: Contexto MCP para logging
+        media_resolution: Resolução de mídia - 'low' (~100 tok/s, até 3h), 'default' (~300 tok/s, até 1h), 'high'
 
     Returns:
         Dicionário com resultado da análise
     """
     from google import genai
+    from google.genai import types
 
     if not GEMINI_API_KEY:
         raise RuntimeError(
@@ -574,10 +577,24 @@ async def _upload_and_analyze_gemini(
 
     await ctx.info(f"🧠 Analisando com {GEMINI_MODEL}...")
 
+    # Build GenerateContentConfig with system_instruction and media_resolution
+    config_kwargs = {
+        "system_instruction": prompt,
+    }
+
+    if media_resolution == "low":
+        config_kwargs["media_resolution"] = types.MediaResolution.MEDIA_RESOLUTION_LOW
+        await ctx.info("📐 Usando resolução baixa (~100 tokens/seg — suporta até 3h de vídeo)")
+    elif media_resolution == "high":
+        config_kwargs["media_resolution"] = types.MediaResolution.MEDIA_RESOLUTION_HIGH
+
+    config = types.GenerateContentConfig(**config_kwargs)
+
     response = await asyncio.to_thread(
         client.models.generate_content,
         model=GEMINI_MODEL,
-        contents=[uploaded, prompt],
+        contents=[uploaded, "Analise o vídeo conforme as instruções do sistema."],
+        config=config,
     )
 
     return {
@@ -586,6 +603,7 @@ async def _upload_and_analyze_gemini(
         "file_name": path.name,
         "file_size": file_size,
         "file_size_mb": round(file_size_mb, 2),
+        "media_resolution": media_resolution,
     }
 
 
@@ -594,18 +612,20 @@ async def analyze_local_video(
     file_path: str,
     analysis_type: str = "comprehensive",
     custom_prompt: str = "",
+    media_resolution: str = "auto",
     *,
     ctx: Context
 ) -> Dict[str, Any]:
     """
     Analisa um arquivo de vídeo local usando Google Gemini diretamente.
-    Suporta arquivos até 2GB e vídeos de até 1 hora.
+    Suporta arquivos até 2GB e vídeos de até 3 horas (em resolução baixa).
     Não requer o backend API — conecta direto ao Gemini.
 
     Args:
         file_path: Caminho absoluto para o arquivo de vídeo (.mp4, .mov, .avi, .mkv, .webm)
         analysis_type: Tipo de análise - comprehensive, summary, transcription, visual_description, project_management
         custom_prompt: Prompt personalizado (sobrescreve o analysis_type se fornecido)
+        media_resolution: Resolução de mídia - 'auto' (detecta pelo tamanho), 'low' (~100 tok/s, até 3h), 'default' (~300 tok/s, até 1h), 'high'
 
     Returns:
         Resultado da análise com conteúdo estruturado
@@ -617,12 +637,23 @@ async def analyze_local_video(
         await ctx.error(f"Tipo de análise inválido: {analysis_type}")
         raise ValueError(f"Tipo de análise deve ser um de: {', '.join(VALID_ANALYSIS_TYPES)}")
 
+    # Auto-detect media_resolution based on file size
+    # Files > 50MB likely contain long videos that need low resolution to fit in 1M context
+    resolved_resolution = media_resolution
+    if media_resolution == "auto":
+        file_size_mb = Path(file_path).stat().st_size / (1024 * 1024)
+        if file_size_mb > 50:
+            resolved_resolution = "low"
+            await ctx.info(f"📐 Auto-detectado: arquivo grande ({file_size_mb:.0f}MB) — usando resolução baixa para caber no contexto")
+        else:
+            resolved_resolution = "default"
+
     # Selecionar prompt
     prompt = custom_prompt.strip() if custom_prompt.strip() else ANALYSIS_PROMPTS.get(analysis_type, ANALYSIS_PROMPTS["comprehensive"])
 
     try:
         start_time = time.time()
-        result = await _upload_and_analyze_gemini(file_path, prompt, ctx)
+        result = await _upload_and_analyze_gemini(file_path, prompt, ctx, media_resolution=resolved_resolution)
         processing_time = time.time() - start_time
 
         await ctx.info(f"🎉 Análise concluída em {processing_time:.1f}s!")
